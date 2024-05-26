@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Supermercado.Models
+﻿namespace Supermercado.Models
 {
     public class Cliente
     {
@@ -16,4 +10,3 @@ namespace Supermercado.Models
         }
     }
 }
-

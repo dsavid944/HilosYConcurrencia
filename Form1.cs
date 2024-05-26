@@ -1,25 +1,23 @@
-﻿using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Supermercado.Models;
-using System.Threading;
-using System;
 
 namespace Supermercado
 {
     public partial class Form1 : Form
     {
-        private List<Thread> cajeraThreads = new List<Thread>();
+        private List<Task> cajeraTasks = new List<Task>();
+        private List<CancellationTokenSource> cancellationTokens = new List<CancellationTokenSource>();
         private List<Cajera> cajeras = new List<Cajera>();
         private List<Cliente> clientes = new List<Cliente>();
         private List<LogEntry> logEntries = new List<LogEntry>();
         private int totalTime = 0;
         private Dictionary<string, List<LogEntry>> cajeraLogEntries = new Dictionary<string, List<LogEntry>>();
+        private Dictionary<string, Dictionary<string, (int totalProductos, decimal totalCosto)>> clienteCajeraTotals = new Dictionary<string, Dictionary<string, (int, decimal)>>();
 
         public Form1()
         {
@@ -32,23 +30,25 @@ namespace Supermercado
             {
                 foreach (var cajera in cajeras)
                 {
-                    var cajeraThread = new Thread(() =>
+                    var cancellationTokenSource = new CancellationTokenSource();
+                    cancellationTokens.Add(cancellationTokenSource);
+
+                    var cajeraTask = Task.Run(() =>
                     {
-                        var cajeraObj = new CajeraThread(cajera, cliente, LogMessage);
+                        var cajeraObj = new CajeraThread(cajera, cliente, LogMessage, cancellationTokenSource.Token);
                         cajeraObj.Run();
                         CajeraFinalizada(cajera.Nombre);
-                    });
-                    cajeraThreads.Add(cajeraThread);
-                    cajeraThread.Start();
+                    }, cancellationTokenSource.Token);
+                    cajeraTasks.Add(cajeraTask);
                 }
             }
         }
 
         private void btnDetenerSimulacion_Click(object sender, EventArgs e)
         {
-            foreach (var thread in cajeraThreads)
+            foreach (var token in cancellationTokens)
             {
-                thread.Abort();
+                token.Cancel();
             }
         }
 
@@ -71,10 +71,10 @@ namespace Supermercado
             if (listBoxCajeras.SelectedItem != null)
             {
                 var selectedCajera = listBoxCajeras.SelectedItem.ToString();
-                var threadToAbort = cajeraThreads.FirstOrDefault(t => t.Name == selectedCajera);
-                if (threadToAbort != null)
+                var index = cajeras.FindIndex(c => c.Nombre == selectedCajera);
+                if (index >= 0 && index < cancellationTokens.Count)
                 {
-                    threadToAbort.Abort();
+                    cancellationTokens[index].Cancel();
                 }
             }
         }
@@ -105,11 +105,43 @@ namespace Supermercado
                     Costo = costo
                 });
 
+                // Actualizar los totales de productos y costos
+                if (!clienteCajeraTotals.ContainsKey(cliente))
+                {
+                    clienteCajeraTotals[cliente] = new Dictionary<string, (int, decimal)>();
+                }
+                if (!clienteCajeraTotals[cliente].ContainsKey(cajera))
+                {
+                    clienteCajeraTotals[cliente][cajera] = (0, 0m);
+                }
+                clienteCajeraTotals[cliente][cajera] = (
+                    clienteCajeraTotals[cliente][cajera].totalProductos + 1,
+                    clienteCajeraTotals[cliente][cajera].totalCosto + costo
+                );
+
+                // Actualizar DataGridView
                 dataGridView.DataSource = null;
                 dataGridView.DataSource = logEntries;
+
+                // Actualizar lblTotalTime
                 totalTime += tiempo;
                 lblTotalTime.Text = "Tiempo Total: " + totalTime + " segundos";
+
+                // Actualizar listBoxTotalClienteCajera
+                UpdateTotalClienteCajeraListBox();
             }));
+        }
+
+        private void UpdateTotalClienteCajeraListBox()
+        {
+            listBoxTotalClienteCajera.Items.Clear();
+            foreach (var cliente in clienteCajeraTotals)
+            {
+                foreach (var cajera in cliente.Value)
+                {
+                    listBoxTotalClienteCajera.Items.Add($"{cliente.Key} con {cajera.Key} - Total Productos: {cajera.Value.totalProductos}, Total Costo: {cajera.Value.totalCosto:C}");
+                }
+            }
         }
 
         private void CajeraFinalizada(string cajera)

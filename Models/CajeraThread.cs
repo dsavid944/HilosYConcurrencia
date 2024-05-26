@@ -1,38 +1,41 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Threading;
 using Supermercado.Models;
 
-namespace Supermercado.Models
+namespace Supermercado
 {
     public class CajeraThread
     {
         private Cajera cajera;
         private Cliente cliente;
-        private Action<string, string, string, int, decimal> logMessage;
+        private Action<string, string, string, int, decimal> logCallback;
+        private CancellationToken cancellationToken;
+        private static Random random = new Random();
 
-        public CajeraThread(Cajera cajera, Cliente cliente, Action<string, string, string, int, decimal> logMessage)
+        public CajeraThread(Cajera cajera, Cliente cliente, Action<string, string, string, int, decimal> logCallback, CancellationToken cancellationToken)
         {
             this.cajera = cajera;
             this.cliente = cliente;
-            this.logMessage = logMessage;
+            this.logCallback = logCallback;
+            this.cancellationToken = cancellationToken;
         }
 
         public void Run()
         {
-            var productos = new[] { "Producto A", "Producto B", "Producto C" };
-            var random = new Random();
-
-            foreach (var producto in productos)
+            while (!cancellationToken.IsCancellationRequested)
             {
-                int tiempo = random.Next(1, 5);
+                // Simular la compra de un producto aleatorio
+                string producto = $"Producto {random.Next(1, 101)}";
+                int cantidad = random.Next(1, 5);
                 decimal costo = random.Next(1, 100);
+
+                // Simular el tiempo de procesamiento
+                int tiempo = random.Next(1, 10);
                 Thread.Sleep(tiempo * 1000);
 
-                logMessage(cajera.Nombre, cliente.Nombre, producto, tiempo, costo);
+                // Loguear la información
+                logCallback(cajera.Nombre, cliente.Nombre, producto, tiempo, costo);
             }
         }
     }

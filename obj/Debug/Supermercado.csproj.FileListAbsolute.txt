@@ -2,9 +2,9 @@ C:\Users\user\source\repos\Supermercado\bin\Debug\Supermercado.exe.config
 C:\Users\user\source\repos\Supermercado\bin\Debug\Supermercado.exe
 C:\Users\user\source\repos\Supermercado\bin\Debug\Supermercado.pdb
 C:\Users\user\source\repos\Supermercado\obj\Debug\Supermercado.csproj.AssemblyReference.cache
+C:\Users\user\source\repos\Supermercado\obj\Debug\Supermercado.Form1.resources
 C:\Users\user\source\repos\Supermercado\obj\Debug\Supermercado.Properties.Resources.resources
 C:\Users\user\source\repos\Supermercado\obj\Debug\Supermercado.csproj.GenerateResource.cache
 C:\Users\user\source\repos\Supermercado\obj\Debug\Supermercado.csproj.CoreCompileInputs.cache
 C:\Users\user\source\repos\Supermercado\obj\Debug\Supermercado.exe
 C:\Users\user\source\repos\Supermercado\obj\Debug\Supermercado.pdb
-C:\Users\user\source\repos\Supermercado\obj\Debug\Supermercado.Form1.resources
